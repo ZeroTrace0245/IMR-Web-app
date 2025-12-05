@@ -3,7 +3,7 @@
 
 SET NOCOUNT ON;
 
--- Drop DB if exists (CAUTION: for development only)
+-- Drop DB if exists
 IF EXISTS(SELECT * FROM sys.databases WHERE name = 'GreenGridDB')
 BEGIN
     ALTER DATABASE GreenGridDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
@@ -102,9 +102,9 @@ CREATE TABLE Payment(
 );
 GO
 
--- =====================================
+
 -- Function: consumption
--- =====================================
+
 CREATE FUNCTION dbo.ufn_Consumption(@prev DECIMAL(18,4), @curr DECIMAL(18,4))
 RETURNS DECIMAL(18,4) AS
 BEGIN
@@ -113,9 +113,9 @@ BEGIN
 END;
 GO
 
--- =====================================
+
 -- Stored Procedure: Generate bill for a customer
--- =====================================
+
 CREATE PROCEDURE dbo.sp_GenerateBillForCustomer
     @CustomerId INT,
     @PeriodStart DATE,
@@ -168,9 +168,9 @@ BEGIN
 END;
 GO
 
--- =====================================
+
 -- Trigger: After payment update bill
--- =====================================
+
 CREATE TRIGGER trg_AfterPayment_UpdateBill
 ON Payment
 AFTER INSERT
@@ -188,9 +188,9 @@ BEGIN
 END;
 GO
 
--- =====================================
+
 -- Views
--- =====================================
+
 CREATE VIEW vw_UnpaidBills AS
 SELECT b.BillId, b.BillNumber, c.CustomerRef, c.Name, b.PeriodStart, b.PeriodEnd, b.TotalAmount, b.OutstandingAmount, b.Status
 FROM Bill b
@@ -203,9 +203,9 @@ FROM Payment p
 GROUP BY YEAR(p.PaymentDate), MONTH(p.PaymentDate);
 GO
 
--- =====================================
+
 -- Stored Procedure: List defaulters
--- =====================================
+
 CREATE PROCEDURE dbo.sp_ListDefaulters
     @DaysOverdue INT = 30
 AS
@@ -219,9 +219,9 @@ BEGIN
 END;
 GO
 
--- =====================================
+
 -- Sample data (10+ rows per table where possible)
--- =====================================
+
 INSERT INTO UtilityType (Name) VALUES ('Electricity'),('Water'),('Gas');
 
 INSERT INTO Customer (CustomerRef, Name, CustomerType, Phone, Email, Address)
