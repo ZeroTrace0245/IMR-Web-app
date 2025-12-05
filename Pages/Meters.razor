@@ -1,0 +1,44 @@
+@page "/meters"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Meters</PageTitle>
+
+<h1>Meters</h1>
+
+@if (meters == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>Customer</th>
+                <th>Utility</th>
+                <th>Active</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in meters)
+            {
+                <tr>
+                    <td>@m.MeterSerial</td>
+                    <td>@m.CustomerId</td>
+                    <td>@m.Utility</td>
+                    <td>@(m.IsActive ? "Yes" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<IMR_Web_app.Services.Models.MeterModel>? meters;
+
+    protected override async Task OnInitializedAsync()
+    {
+        meters = await GService.GetMetersAsync();
+    }
+}

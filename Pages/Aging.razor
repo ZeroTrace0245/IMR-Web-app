@@ -1,0 +1,40 @@
+@page "/aging"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Aging Report</PageTitle>
+
+<h1>Accounts Aging</h1>
+
+@if (report == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Bucket</th>
+                <th>Amount (USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var b in report.Buckets)
+            {
+                <tr>
+                    <td>@b.Bucket</td>
+                    <td>@b.Amount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code{
+    private IMR_Web_app.Services.Models.AgingReportModel? report;
+
+    protected override async Task OnInitializedAsync()
+    {
+        report = await GService.GetAgingReportAsync();
+    }
+}

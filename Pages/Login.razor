@@ -1,0 +1,46 @@
+@page "/login"
+@inject IMR_Web_app.Services.IAuthService AuthService
+@inject NavigationManager NavManager
+
+<div class="d-flex align-items-center justify-content-center" style="min-height:60vh;">
+    <div class="card p-4" style="max-width:420px; width:100%;">
+        <div class="text-center mb-3">
+            <img src="/images/greengrid-logo.svg" alt="GreenGrid" style="height:80px;" />
+        </div>
+        <h4 class="text-center">Sign in to GreenGrid</h4>
+        <EditForm Model="loginModel" OnValidSubmit="OnSubmit">
+            <div class="mb-3">
+                <InputText class="form-control" @bind-Value="loginModel.Username" placeholder="Username" />
+            </div>
+            <div class="mb-3">
+                <InputText class="form-control" @bind-Value="loginModel.Password" placeholder="Password" type="password" />
+            </div>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="text-danger mb-2">@error</div>
+            }
+            <button class="btn btn-primary w-100" type="submit">Sign in</button>
+        </EditForm>
+    </div>
+</div>
+
+@code{
+    private LoginModel loginModel = new();
+    private string? error;
+
+    private async Task OnSubmit()
+    {
+        error = null;
+        var ok = await AuthService.LoginAsync(loginModel.Username ?? string.Empty, loginModel.Password ?? string.Empty);
+        if (ok)
+        {
+            NavManager.NavigateTo("/greengrid", true);
+        }
+        else
+        {
+            error = "Invalid username or password.";
+        }
+    }
+
+    private class LoginModel { public string? Username { get; set; } public string? Password { get; set; } }
+}

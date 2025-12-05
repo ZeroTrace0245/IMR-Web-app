@@ -1,0 +1,46 @@
+@page "/billing"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Billing</PageTitle>
+
+<h1>Bills</h1>
+
+@if (bills == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Bill #</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Outstanding</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in bills)
+            {
+                <tr>
+                    <td>@b.BillNumber</td>
+                    <td>@b.CustomerId</td>
+                    <td>@b.TotalAmount</td>
+                    <td>@b.OutstandingAmount</td>
+                    <td>@b.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<IMR_Web_app.Services.Models.BillModel>? bills;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bills = await GService.GetBillsAsync();
+    }
+}

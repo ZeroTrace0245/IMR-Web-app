@@ -1,0 +1,57 @@
+@page "/greengrid"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Green Grid Overview</PageTitle>
+
+<h1>Green Grid - Utilities Dashboard</h1>
+
+<p class="lead">An eco-focused utilities management overview.</p>
+
+@if (overview == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card p-3 mb-3">
+                <h5>Total Customers</h5>
+                <h3>@overview.TotalCustomers</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 mb-3">
+                <h5>Total Meters</h5>
+                <h3>@overview.TotalMeters</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 mb-3">
+                <h5>Outstanding (USD)</h5>
+                <h3>@overview.TotalOutstanding</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 mb-3">
+                <h5>Monthly Revenue (USD)</h5>
+                <h3>@overview.MonthlyRevenue</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a class="btn btn-primary me-2" href="/customers">View Customers</a>
+        <a class="btn btn-secondary me-2" href="/meters">View Meters</a>
+        <a class="btn btn-success" href="/billing">View Bills</a>
+    </div>
+}
+
+@code {
+    private IMR_Web_app.Services.Models.OverviewModel? overview;
+
+    protected override async Task OnInitializedAsync()
+    {
+        overview = await GService.GetOverviewAsync();
+    }
+}

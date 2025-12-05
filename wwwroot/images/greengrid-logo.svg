@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="80" viewBox="0 0 512 512">
+  <g>
+    <path fill="#2e7d32" d="M256 0C195 0 148 48 148 108c0 77 108 160 108 160s108-83 108-160C364 48 317 0 256 0z"/>
+    <path fill="#66bb6a" d="M219 124l60 0 0-92-60 92z"/>
+    <text x="10" y="320" font-family="Arial" font-size="70" fill="#0b5827">GreenGrid</text>
+  </g>
+</svg>
