@@ -1,0 +1,74 @@
+@page "/tariffs"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Tariffs</PageTitle>
+
+<h1>Tariff Management</h1>
+
+<div class="card p-3 mb-3">
+    <h5>Add Tariff</h5>
+    <EditForm Model="newTariff" OnValidSubmit="AddTariff">
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                <InputNumber class="form-control" @bind-Value="newTariff.UtilityTypeId" placeholder="UtilityTypeId" />
+            </div>
+            <div class="col-md-6 mb-2">
+                <InputText class="form-control" @bind-Value="newTariff.Name" placeholder="Name" />
+            </div>
+            <div class="col-md-6 mb-2">
+                <InputNumber class="form-control" @bind-Value="newTariff.UnitPrice" placeholder="UnitPrice" />
+            </div>
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-success">Add Tariff</button>
+        </div>
+    </EditForm>
+</div>
+
+@if (tariffs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr><th>Id</th><th>UtilityTypeId</th><th>Name</th><th>UnitPrice</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach(var t in tariffs)
+            {
+                <tr>
+                    <td>@t.TariffId</td>
+                    <td>@t.UtilityTypeId</td>
+                    <td>@t.Name</td>
+                    <td>@t.UnitPrice</td>
+                    <td><button class="btn btn-sm btn-danger" @onclick="() => DeleteTariff(t.TariffId)">Delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code{
+    private List<IMR_Web_app.Services.Models.TariffModel>? tariffs;
+    private IMR_Web_app.Services.Models.TariffModel newTariff = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        tariffs = await GService.GetTariffsAsync();
+    }
+
+    private async Task AddTariff()
+    {
+        await GService.AddTariffAsync(newTariff);
+        newTariff = new();
+        tariffs = await GService.GetTariffsAsync();
+    }
+
+    private async Task DeleteTariff(int id)
+    {
+        await GService.DeleteTariffAsync(id);
+        tariffs = await GService.GetTariffsAsync();
+    }
+}

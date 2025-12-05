@@ -1,0 +1,54 @@
+@page "/reports"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Reports</PageTitle>
+
+<h1>Reports</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <h5>Monthly Revenue</h5>
+            @if (monthly == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                <div>@monthly.Month/@monthly.Year: @monthly.Collected</div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <h5>Top Consumers</h5>
+            @if (top == null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                <table class="table">
+                    <thead><tr><th>Customer</th><th>Consumption</th></tr></thead>
+                    <tbody>
+                        @foreach(var t in top)
+                        {
+                            <tr><td>@t.CustomerName</td><td>@t.Consumption</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@code{
+    private IMR_Web_app.Services.Models.MonthlyRevenueModel? monthly;
+    private List<IMR_Web_app.Services.Models.TopConsumerModel>? top;
+
+    protected override async Task OnInitializedAsync()
+    {
+        monthly = await GService.GetMonthlyRevenueAsync();
+        top = await GService.GetTopConsumersAsync(5);
+    }
+}

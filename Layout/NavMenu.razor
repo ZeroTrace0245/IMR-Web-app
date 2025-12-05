@@ -23,6 +23,29 @@
                 <span class="bi bi-speedometer2-nav-menu" aria-hidden="true"></span> Green Grid
             </NavLink>
         </div>
+        @* Role specific links *@
+        @inject IMR_Web_app.Services.IAuthService AuthService
+        @if (!string.IsNullOrEmpty(AuthService.CurrentRole))
+        {
+            <div class="nav-item px-3"><div class="nav-link text-muted">Role: @AuthService.CurrentRole</div></div>
+            @if (AuthService.IsInRole("Administrative"))
+            {
+                <div class="nav-item px-3"><NavLink class="nav-link" href="customers">Manage Customers</NavLink></div>
+                <div class="nav-item px-3"><NavLink class="nav-link" href="tariffs">Tariffs</NavLink></div>
+            }
+            if (AuthService.IsInRole("MeterReader"))
+            {
+                <div class="nav-item px-3"><NavLink class="nav-link" href="readings">Enter Readings</NavLink></div>
+            }
+            if (AuthService.IsInRole("Cashier"))
+            {
+                <div class="nav-item px-3"><NavLink class="nav-link" href="billing">Billing</NavLink></div>
+            }
+            if (AuthService.IsInRole("Manager"))
+            {
+                <div class="nav-item px-3"><NavLink class="nav-link" href="aging">Reports</NavLink></div>
+            }
+        }
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="customers">
                 <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Customers
@@ -32,6 +55,18 @@
             <NavLink class="nav-link" href="meters">
                 <span class="bi bi-hdd-network-fill-nav-menu" aria-hidden="true"></span> Meters
             </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="readings">Readings</NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="tariffs">Tariffs</NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="billing-payments">Billing</NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reports">Reports</NavLink>
         </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="aging">

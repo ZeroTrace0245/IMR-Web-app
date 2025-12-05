@@ -5,5 +5,7 @@ namespace IMR_Web_app.Services
         bool IsAuthenticated { get; }
         Task<bool> LoginAsync(string username, string password);
         Task LogoutAsync();
+        string? CurrentRole { get; }
+        bool IsInRole(string role);
     }
 }

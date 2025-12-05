@@ -1,0 +1,91 @@
+@page "/billing-payments"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Billing & Payments</PageTitle>
+
+<h1>Billing & Payments</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <h5>Generate Bill</h5>
+            <EditForm Model="genModel" OnValidSubmit="GenerateBill">
+                <div class="mb-2">
+                    <InputNumber class="form-control" @bind-Value="genModel.CustomerId" placeholder="CustomerId" />
+                </div>
+                <div class="mb-2">
+                    <InputDate class="form-control" @bind-Value="genModel.PeriodStart" />
+                </div>
+                <div class="mb-2">
+                    <InputDate class="form-control" @bind-Value="genModel.PeriodEnd" />
+                </div>
+                <button class="btn btn-primary">Generate</button>
+            </EditForm>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 mb-3">
+            <h5>Record Payment</h5>
+            <EditForm Model="payModel" OnValidSubmit="RecordPayment">
+                <div class="mb-2">
+                    <InputNumber class="form-control" @bind-Value="payModel.BillId" placeholder="BillId" />
+                </div>
+                <div class="mb-2">
+                    <InputNumber class="form-control" @bind-Value="payModel.Amount" placeholder="Amount" />
+                </div>
+                <div class="mb-2">
+                    <InputText class="form-control" @bind-Value="payModel.Method" placeholder="Method" />
+                </div>
+                <button class="btn btn-success">Record</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (bills == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>#</th><th>Bill #</th><th>Customer</th><th>Total</th><th>Outstanding</th><th>Status</th></tr></thead>
+        <tbody>
+            @foreach(var b in bills)
+            {
+                <tr>
+                    <td>@b.BillId</td>
+                    <td>@b.BillNumber</td>
+                    <td>@b.CustomerId</td>
+                    <td>@b.TotalAmount</td>
+                    <td>@b.OutstandingAmount</td>
+                    <td>@b.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code{
+    private List<IMR_Web_app.Services.Models.BillModel>? bills;
+    private (int CustomerId, System.DateTime PeriodStart, System.DateTime PeriodEnd) genModel = (1, System.DateTime.Today.AddMonths(-1), System.DateTime.Today);
+    private IMR_Web_app.Services.Models.PaymentModel payModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        bills = await GService.GetBillsAsync();
+    }
+
+    private async Task GenerateBill()
+    {
+        var b = await GService.GenerateBillAsync(genModel.CustomerId, genModel.PeriodStart, genModel.PeriodEnd);
+        bills = await GService.GetBillsAsync();
+    }
+
+    private async Task RecordPayment()
+    {
+        await GService.RecordPaymentAsync(payModel);
+        payModel = new();
+        bills = await GService.GetBillsAsync();
+    }
+}

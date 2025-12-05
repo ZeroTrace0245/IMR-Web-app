@@ -1,0 +1,67 @@
+@page "/readings"
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Meter Readings</PageTitle>
+
+<h1>Meter Readings Entry</h1>
+
+<div class="card p-3 mb-3">
+    <h5>Add Reading</h5>
+    <EditForm Model="newReading" OnValidSubmit="AddReading">
+        <div class="row">
+            <div class="col-md-6 mb-2">
+                <InputNumber class="form-control" @bind-Value="newReading.MeterId" placeholder="MeterId" />
+            </div>
+            <div class="col-md-6 mb-2">
+                <InputDate class="form-control" @bind-Value="newReading.ReadingDate" />
+            </div>
+            <div class="col-md-6 mb-2">
+                <InputNumber class="form-control" @bind-Value="newReading.ReadingValue" placeholder="Value" />
+            </div>
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-success">Add Reading</button>
+        </div>
+    </EditForm>
+</div>
+
+@if (readings == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr><th>Id</th><th>Meter</th><th>Date</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            @foreach(var r in readings)
+            {
+                <tr>
+                    <td>@r.ReadingId</td>
+                    <td>@r.MeterId</td>
+                    <td>@r.ReadingDate.ToShortDateString()</td>
+                    <td>@r.ReadingValue</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code{
+    private List<IMR_Web_app.Services.Models.MeterReadingModel>? readings;
+    private IMR_Web_app.Services.Models.MeterReadingModel newReading = new() { ReadingDate = System.DateTime.Today };
+
+    protected override async Task OnInitializedAsync()
+    {
+        readings = await GService.GetReadingsAsync();
+    }
+
+    private async Task AddReading()
+    {
+        await GService.AddReadingAsync(newReading);
+        newReading = new() { ReadingDate = System.DateTime.Today };
+        readings = await GService.GetReadingsAsync();
+    }
+}
