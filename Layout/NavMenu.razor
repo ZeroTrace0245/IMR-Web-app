@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject IMR_Web_app.Services.IAuthService AuthService
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid d-flex align-items-center">
         <a class="navbar-brand d-flex align-items-center" href="">
             <img src="/images/greengrid-logo.svg" alt="Logo" style="height:36px; margin-right:8px;" />
@@ -10,91 +12,103 @@
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="greengrid">
-                <span class="bi bi-speedometer2-nav-menu" aria-hidden="true"></span> Green Grid
-            </NavLink>
-        </div>
-        @* Role specific links *@
-        @inject IMR_Web_app.Services.IAuthService AuthService
+<div class="@NavMenuCssClass">
+    <div class="nav-scrollable">
         @if (!string.IsNullOrEmpty(AuthService.CurrentRole))
         {
-            <div class="nav-item px-3"><div class="nav-link text-muted">Role: @AuthService.CurrentRole</div></div>
-            @if (AuthService.IsInRole("Administrative"))
-            {
-                <div class="nav-item px-3"><NavLink class="nav-link" href="customers">Manage Customers</NavLink></div>
-                <div class="nav-item px-3"><NavLink class="nav-link" href="tariffs">Tariffs</NavLink></div>
-            }
-            if (AuthService.IsInRole("MeterReader"))
-            {
-                <div class="nav-item px-3"><NavLink class="nav-link" href="readings">Enter Readings</NavLink></div>
-            }
-            if (AuthService.IsInRole("Cashier"))
-            {
-                <div class="nav-item px-3"><NavLink class="nav-link" href="billing">Billing</NavLink></div>
-            }
-            if (AuthService.IsInRole("Manager"))
-            {
-                <div class="nav-item px-3"><NavLink class="nav-link" href="aging">Reports</NavLink></div>
-            }
+            <div class="nav-role px-3">
+                <span class="role-label">Role</span>
+                <span class="role-chip">@AuthService.CurrentRole</span>
+            </div>
         }
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="customers">
-                <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Customers
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="meters">
-                <span class="bi bi-hdd-network-fill-nav-menu" aria-hidden="true"></span> Meters
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="readings">Readings</NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tariffs">Tariffs</NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="billing-payments">Billing</NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="reports">Reports</NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="aging">
-                <span class="bi bi-clock-history-nav-menu" aria-hidden="true"></span> Aging
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="billing">
-                <span class="bi bi-receipt-cutoff-nav-menu" aria-hidden="true"></span> Billing
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="login">
-                <span class="bi bi-person-circle-nav-menu" aria-hidden="true"></span> Login
-            </NavLink>
-        </div>
-    </nav>
+
+        <nav class="nav flex-column nav-groups">
+            <div class="nav-section">
+                <div class="nav-section-title px-3">Overview</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="" Match="NavLinkMatch.All" @onclick="CloseNavMenu">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="greengrid" @onclick="CloseNavMenu">
+                        <span class="bi bi-speedometer2-nav-menu" aria-hidden="true"></span> Green Grid
+                    </NavLink>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title px-3">Operations</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="customers" @onclick="CloseNavMenu">
+                        <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Customers
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="meters" @onclick="CloseNavMenu">
+                        <span class="bi bi-hdd-network-fill-nav-menu" aria-hidden="true"></span> Meters
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="readings" @onclick="CloseNavMenu">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Readings
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="tariffs" @onclick="CloseNavMenu">
+                        <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tariffs
+                    </NavLink>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title px-3">Billing & Reports</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="billing-payments" @onclick="CloseNavMenu">
+                        <span class="bi bi-receipt-cutoff-nav-menu" aria-hidden="true"></span> Billing & Payments
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="billing" @onclick="CloseNavMenu">
+                        <span class="bi bi-cash-coin-nav-menu" aria-hidden="true"></span> Billing Runs
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="reports" @onclick="CloseNavMenu">
+                        <span class="bi bi-graph-up-arrow-nav-menu" aria-hidden="true"></span> Reports
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="aging" @onclick="CloseNavMenu">
+                        <span class="bi bi-clock-history-nav-menu" aria-hidden="true"></span> Aging
+                    </NavLink>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title px-3">Account</div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill" href="login" @onclick="CloseNavMenu">
+                        <span class="bi bi-person-circle-nav-menu" aria-hidden="true"></span> Login
+                    </NavLink>
+                </div>
+            </div>
+        </nav>
+    </div>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "nav-menu collapse" : "nav-menu";
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
 
-    
+    private void CloseNavMenu()
+    {
+        collapseNavMenu = true;
+    }
 }
