@@ -1,15 +1,29 @@
 @page "/billing-payments"
+@using System
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
 @inject IMR_Web_app.Services.IGreenGridService GService
 
 <PageTitle>Billing & Payments</PageTitle>
 
 <h1>Billing & Payments</h1>
 
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
 <div class="row">
     <div class="col-md-6">
         <div class="card p-3 mb-3">
             <h5>Generate Bill</h5>
             <EditForm Model="genModel" OnValidSubmit="GenerateBill">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
                 <div class="mb-2">
                     <InputNumber class="form-control" @bind-Value="genModel.CustomerId" placeholder="CustomerId" />
                 </div>
@@ -27,6 +41,8 @@
         <div class="card p-3 mb-3">
             <h5>Record Payment</h5>
             <EditForm Model="payModel" OnValidSubmit="RecordPayment">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
                 <div class="mb-2">
                     <InputNumber class="form-control" @bind-Value="payModel.BillId" placeholder="BillId" />
                 </div>
@@ -48,10 +64,28 @@
 }
 else
 {
+    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0">Status</label>
+            <select class="form-select form-select-sm" style="width:160px" @bind="statusFilter">
+                <option value="All">All</option>
+                <option value="Paid">Paid</option>
+                <option value="PartiallyPaid">Partially Paid</option>
+                <option value="Unpaid">Unpaid</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm" @onclick="ResetFilters">Reset</button>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success">Paid: @CountStatus("Paid")</span>
+            <span class="badge bg-warning text-dark">Partial: @CountStatus("PartiallyPaid")</span>
+            <span class="badge bg-danger">Unpaid: @CountStatus("Unpaid")</span>
+        </div>
+    </div>
+
     <table class="table">
-        <thead><tr><th>#</th><th>Bill #</th><th>Customer</th><th>Total</th><th>Outstanding</th><th>Status</th></tr></thead>
+        <thead><tr><th>#</th><th>Bill #</th><th>Customer</th><th>Total</th><th>Outstanding</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
-            @foreach(var b in bills)
+            @foreach(var b in FilteredBills)
             {
                 <tr>
                     <td>@b.BillId</td>
@@ -59,7 +93,12 @@ else
                     <td>@b.CustomerId</td>
                     <td>@b.TotalAmount</td>
                     <td>@b.OutstandingAmount</td>
-                    <td>@b.Status</td>
+                    <td><span class="@GetStatusBadgeClass(b.Status)">@FormatStatus(b.Status)</span></td>
+                    <td class="d-flex gap-1 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm" @onclick="() => MarkPaid(b)">Mark paid</button>
+                        <button class="btn btn-outline-warning btn-sm" @onclick="() => MarkPartial(b)">Partial</button>
+                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => MarkUnpaid(b)">Reset</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -68,24 +107,135 @@ else
 
 @code{
     private List<IMR_Web_app.Services.Models.BillModel>? bills;
-    private (int CustomerId, System.DateTime PeriodStart, System.DateTime PeriodEnd) genModel = (1, System.DateTime.Today.AddMonths(-1), System.DateTime.Today);
-    private IMR_Web_app.Services.Models.PaymentModel payModel = new();
+    private GenerateBillForm genModel = new();
+    private PaymentForm payModel = new();
+    private string? errorMessage;
+    private string? successMessage;
+    private string statusFilter = "All";
 
     protected override async Task OnInitializedAsync()
     {
-        bills = await GService.GetBillsAsync();
+        await LoadBills();
     }
 
     private async Task GenerateBill()
     {
-        var b = await GService.GenerateBillAsync(genModel.CustomerId, genModel.PeriodStart, genModel.PeriodEnd);
-        bills = await GService.GetBillsAsync();
+        errorMessage = successMessage = null;
+        try
+        {
+            await GService.GenerateBillAsync(genModel.CustomerId, genModel.PeriodStart, genModel.PeriodEnd);
+            await LoadBills();
+            successMessage = "Bill generated.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to generate bill: {ex.Message}";
+        }
     }
 
     private async Task RecordPayment()
     {
-        await GService.RecordPaymentAsync(payModel);
-        payModel = new();
-        bills = await GService.GetBillsAsync();
+        errorMessage = successMessage = null;
+        try
+        {
+            var payment = new IMR_Web_app.Services.Models.PaymentModel
+            {
+                BillId = payModel.BillId,
+                Amount = payModel.Amount,
+                Method = payModel.Method
+            };
+            await GService.RecordPaymentAsync(payment);
+            payModel = new();
+            await LoadBills();
+            successMessage = "Payment recorded.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to record payment: {ex.Message}";
+        }
+    }
+
+    private async Task LoadBills()
+    {
+        try
+        {
+            bills = await GService.GetBillsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load bills: {ex.Message}";
+            bills = new();
+        }
+    }
+
+    private IEnumerable<IMR_Web_app.Services.Models.BillModel> FilteredBills
+        => string.Equals(statusFilter, "All", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(statusFilter)
+            ? bills ?? Enumerable.Empty<IMR_Web_app.Services.Models.BillModel>()
+            : (bills ?? Enumerable.Empty<IMR_Web_app.Services.Models.BillModel>())
+                .Where(b => string.Equals(b.Status, statusFilter, StringComparison.OrdinalIgnoreCase));
+
+    private int CountStatus(string status)
+        => bills?.Count(b => string.Equals(b.Status, status, StringComparison.OrdinalIgnoreCase)) ?? 0;
+
+    private string GetStatusBadgeClass(string? status) => status switch
+    {
+        "Paid" => "badge bg-success",
+        "PartiallyPaid" => "badge bg-warning text-dark",
+        "Unpaid" => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+
+    private string FormatStatus(string? status) => status switch
+    {
+        "PartiallyPaid" => "Partially paid",
+        _ => status ?? "-"
+    };
+
+    private async Task MarkPaid(IMR_Web_app.Services.Models.BillModel bill)
+    {
+        await GService.UpdateBillStatusAsync(bill.BillId, "Paid", 0);
+        await LoadBills();
+    }
+
+    private async Task MarkPartial(IMR_Web_app.Services.Models.BillModel bill)
+    {
+        var partialOutstanding = bill.TotalAmount / 2;
+        await GService.UpdateBillStatusAsync(bill.BillId, "PartiallyPaid", partialOutstanding);
+        await LoadBills();
+    }
+
+    private async Task MarkUnpaid(IMR_Web_app.Services.Models.BillModel bill)
+    {
+        await GService.UpdateBillStatusAsync(bill.BillId, "Unpaid", bill.TotalAmount);
+        await LoadBills();
+    }
+
+    private void ResetFilters()
+    {
+        statusFilter = "All";
+    }
+
+    private class GenerateBillForm
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "CustomerId must be greater than 0")]
+        public int CustomerId { get; set; } = 1;
+
+        [Required]
+        public System.DateTime PeriodStart { get; set; } = System.DateTime.Today.AddMonths(-1);
+
+        [Required]
+        public System.DateTime PeriodEnd { get; set; } = System.DateTime.Today;
+    }
+
+    private class PaymentForm
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "BillId must be greater than 0")]
+        public int BillId { get; set; }
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
+        public decimal Amount { get; set; } = 0.01m;
+
+        [Required]
+        public string Method { get; set; } = "Cash";
     }
 }

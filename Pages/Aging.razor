@@ -1,40 +1,175 @@
 @page "/aging"
+@using System.Linq
 @inject IMR_Web_app.Services.IGreenGridService GService
 
 <PageTitle>Aging Report</PageTitle>
 
 <h1>Accounts Aging</h1>
 
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+        <strong>Last refreshed:</strong> @lastRefreshed
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <button class="btn btn-outline-secondary btn-sm" @onclick="LoadReport">Refresh aging</button>
+        <div class="input-group input-group-sm" style="width: 220px;">
+            <span class="input-group-text">Defaulters &ge;</span>
+            <InputNumber class="form-control" @bind-Value="daysOverdue" />
+            <button class="btn btn-primary" @onclick="LoadDefaulters">Apply</button>
+        </div>
+    </div>
+</div>
+
 @if (report == null)
 {
-    <p><em>Loading...</em></p>
+    <p><em>Loading aging report...</em></p>
 }
 else
 {
-    <table class="table">
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted">Total Outstanding</div>
+                <div class="fs-4 fw-semibold">@TotalOutstanding.ToString("C")</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted">Largest Bucket</div>
+                <div class="fs-5 fw-semibold">@LargestBucketLabel</div>
+                <div>@LargestBucketAmount.ToString("C")</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 h-100">
+                <div class="text-muted">Buckets</div>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    @foreach (var b in report.Buckets)
+                    {
+                        <span class="badge bg-secondary">@b.Bucket: @b.Amount.ToString("C")</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table align-middle">
         <thead>
             <tr>
                 <th>Bucket</th>
                 <th>Amount (USD)</th>
+                <th>% of total</th>
             </tr>
         </thead>
         <tbody>
             @foreach(var b in report.Buckets)
             {
+                var percent = TotalOutstanding > 0 ? (double)(b.Amount / TotalOutstanding) * 100 : 0;
                 <tr>
                     <td>@b.Bucket</td>
-                    <td>@b.Amount</td>
+                    <td>@b.Amount.ToString("C")</td>
+                    <td style="min-width:180px;">
+                        <div class="progress" style="height:8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width:@percent%" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <small class="text-muted">@percent.ToString("0.0")%</small>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
+<div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <h5 class="mb-0">Defaulters (>= @daysOverdue days)</h5>
+        <span class="badge bg-danger">@defaulters.Count dunning</span>
+    </div>
+    @if (!defaulters.Any())
+    {
+        <p class="text-muted mb-0"><em>No defaulters for this threshold.</em></p>
+    }
+    else
+    {
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Bill #</th>
+                    <th>Customer</th>
+                    <th>Total</th>
+                    <th>Outstanding</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in defaulters)
+                {
+                    <tr>
+                        <td>@d.BillNumber</td>
+                        <td>@d.CustomerId</td>
+                        <td>@d.TotalAmount.ToString("C")</td>
+                        <td>@d.OutstandingAmount.ToString("C")</td>
+                        <td><span class="@GetStatusBadgeClass(d.Status)">@d.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
 @code{
     private IMR_Web_app.Services.Models.AgingReportModel? report;
+    private List<IMR_Web_app.Services.Models.BillModel> defaulters = new();
+    private string? errorMessage;
+    private int daysOverdue = 30;
+    private string lastRefreshed = "-";
+
+    private decimal TotalOutstanding => report?.Buckets?.Sum(b => b.Amount) ?? 0;
+    private string LargestBucketLabel => report?.Buckets?.OrderByDescending(b => b.Amount).FirstOrDefault()?.Bucket ?? "-";
+    private decimal LargestBucketAmount => report?.Buckets?.OrderByDescending(b => b.Amount).FirstOrDefault()?.Amount ?? 0;
 
     protected override async Task OnInitializedAsync()
     {
-        report = await GService.GetAgingReportAsync();
+        await LoadReport();
+        await LoadDefaulters();
     }
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            report = await GService.GetAgingReportAsync();
+            lastRefreshed = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load aging report: {ex.Message}";
+        }
+    }
+
+    private async Task LoadDefaulters()
+    {
+        try
+        {
+            defaulters = await GService.GetDefaultersAsync(daysOverdue) ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load defaulters: {ex.Message}";
+            defaulters = new();
+        }
+    }
+
+    private string GetStatusBadgeClass(string? status) => status switch
+    {
+        "Paid" => "badge bg-success",
+        "PartiallyPaid" => "badge bg-warning text-dark",
+        "Unpaid" => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
 }

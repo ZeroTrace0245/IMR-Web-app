@@ -1,0 +1,74 @@
+.overview-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.bar-label {
+    width: 140px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+}
+
+.bar-track {
+    flex: 1;
+    height: 46px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.03));
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 14px;
+    color: var(--primary-contrast);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+    transition: width 260ms ease;
+    background-size: 200% 200%;
+    animation: chart-sheen 6s ease infinite;
+}
+
+.bar-value {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
+
+@keyframes chart-sheen {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@media (max-width: 640px) {
+    .bar-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bar-label {
+        width: auto;
+        padding-left: 4px;
+    }
+
+    .bar-track {
+        width: 100%;
+    }
+
+    .bar-fill {
+        justify-content: center;
+    }
+}

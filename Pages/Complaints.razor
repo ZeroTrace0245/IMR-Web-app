@@ -1,0 +1,172 @@
+@page "/complaints"
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
+@inject IMR_Web_app.Services.IGreenGridService GService
+
+<PageTitle>Complaints</PageTitle>
+
+<h1>Complaints</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="card p-3 mb-3">
+    <h5 class="mb-3">Log a complaint</h5>
+    <EditForm Model="complaintForm" OnValidSubmit="SubmitComplaint">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <InputSelect class="form-select" @bind-Value="complaintForm.CustomerId">
+                    <option value="0">Select customer</option>
+                    @if (customers != null)
+                    {
+                        @foreach (var c in customers)
+                        {
+                            <option value="@c.CustomerId">@c.CustomerRef - @c.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-3 mb-2">
+                <InputSelect class="form-select" @bind-Value="complaintForm.Category">
+                    <option>Billing</option>
+                    <option>Meter</option>
+                    <option>Service</option>
+                    <option>Payment</option>
+                </InputSelect>
+            </div>
+            <div class="col-md-3 mb-2">
+                <InputSelect class="form-select" @bind-Value="complaintForm.Priority">
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                </InputSelect>
+            </div>
+            <div class="col-md-3 mb-2">
+                <InputText class="form-control" @bind-Value="complaintForm.Status" placeholder="Status (Open/In Progress/Resolved)" />
+            </div>
+            <div class="col-12 mb-2">
+                <InputTextArea class="form-control" @bind-Value="complaintForm.Description" placeholder="Describe the complaint" rows="3" />
+            </div>
+        </div>
+        <button class="btn btn-primary">Submit</button>
+    </EditForm>
+</div>
+
+@if (complaints == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Logged</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in complaints)
+            {
+                <tr>
+                    <td>@c.ComplaintId</td>
+                    <td>@GetCustomerName(c.CustomerId)</td>
+                    <td>@c.Category</td>
+                    <td><span class="@GetStatusBadgeClass(c.Status)">@c.Status</span></td>
+                    <td>@c.Priority</td>
+                    <td>@c.LoggedAt.ToString("yyyy-MM-dd")</td>
+                    <td>@c.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<IMR_Web_app.Services.Models.ComplaintModel>? complaints;
+    private List<IMR_Web_app.Services.Models.CustomerModel>? customers;
+    private ComplaintForm complaintForm = new();
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        complaints = await GService.GetComplaintsAsync();
+        customers = await GService.GetCustomersAsync();
+    }
+
+    private async Task SubmitComplaint()
+    {
+        errorMessage = successMessage = null;
+        try
+        {
+            var newComplaint = new IMR_Web_app.Services.Models.ComplaintModel
+            {
+                CustomerId = complaintForm.CustomerId,
+                Category = complaintForm.Category,
+                Description = complaintForm.Description,
+                Priority = complaintForm.Priority,
+                Status = complaintForm.Status,
+                LoggedAt = System.DateTime.UtcNow
+            };
+            await GService.AddComplaintAsync(newComplaint);
+            complaintForm = new();
+            await LoadData();
+            successMessage = "Complaint logged.";
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = $"Could not log complaint: {ex.Message}";
+        }
+    }
+
+    private string GetCustomerName(int customerId)
+    {
+        var c = customers?.FirstOrDefault(x => x.CustomerId == customerId);
+        return c == null ? $"Customer {customerId}" : $"{c.CustomerRef} - {c.Name}";
+    }
+
+    private string GetStatusBadgeClass(string? status) => status switch
+    {
+        "Resolved" => "badge bg-success",
+        "In Progress" => "badge bg-warning text-dark",
+        _ => "badge bg-secondary"
+    };
+
+    private class ComplaintForm
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Select a customer")]
+        public int CustomerId { get; set; }
+
+        [Required]
+        public string Category { get; set; } = "Billing";
+
+        [Required]
+        [MinLength(5)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        public string Priority { get; set; } = "Medium";
+
+        [Required]
+        public string Status { get; set; } = "Open";
+    }
+}

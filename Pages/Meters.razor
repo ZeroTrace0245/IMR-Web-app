@@ -1,9 +1,62 @@
 @page "/meters"
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
 @inject IMR_Web_app.Services.IGreenGridService GService
 
 <PageTitle>Meters</PageTitle>
 
 <h1>Meters</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="card p-3 mb-3">
+    <h5 class="mb-3">Register a meter</h5>
+    <EditForm Model="meterForm" OnValidSubmit="AddMeter">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <InputText class="form-control" @bind-Value="meterForm.MeterSerial" placeholder="Meter serial" />
+            </div>
+            <div class="col-md-3 mb-2">
+                <InputSelect class="form-select" @bind-Value="meterForm.CustomerId">
+                    <option value="0">Select customer</option>
+                    @if (customers != null)
+                    {
+                        @foreach (var c in customers)
+                        {
+                            <option value="@c.CustomerId">@c.CustomerRef - @c.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-3 mb-2">
+                <InputSelect class="form-select" @bind-Value="meterForm.Utility">
+                    <option>Electricity</option>
+                    <option>Water</option>
+                    <option>Gas</option>
+                </InputSelect>
+            </div>
+            <div class="col-md-2 mb-2">
+                <InputDate class="form-control" @bind-Value="meterForm.InstallDate" />
+            </div>
+            <div class="col-md-1 mb-2 d-flex align-items-center">
+                <div class="form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="meterForm.IsActive" />
+                    <label class="form-check-label">Active</label>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary">Save meter</button>
+    </EditForm>
+</div>
 
 @if (meters == null)
 {
@@ -17,6 +70,7 @@ else
                 <th>Serial</th>
                 <th>Customer</th>
                 <th>Utility</th>
+                <th>Installed</th>
                 <th>Active</th>
             </tr>
         </thead>
@@ -25,8 +79,9 @@ else
             {
                 <tr>
                     <td>@m.MeterSerial</td>
-                    <td>@m.CustomerId</td>
+                    <td>@GetCustomerName(m.CustomerId)</td>
                     <td>@m.Utility</td>
+                    <td>@(m.InstallDate?.ToString("yyyy-MM-dd") ?? "-")</td>
                     <td>@(m.IsActive ? "Yes" : "No")</td>
                 </tr>
             }
@@ -36,9 +91,68 @@ else
 
 @code {
     private List<IMR_Web_app.Services.Models.MeterModel>? meters;
+    private List<IMR_Web_app.Services.Models.CustomerModel>? customers;
+    private MeterForm meterForm = new();
+    private string? errorMessage;
+    private string? successMessage;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         meters = await GService.GetMetersAsync();
+        customers = await GService.GetCustomersAsync();
+    }
+
+    private async Task AddMeter()
+    {
+        errorMessage = successMessage = null;
+        try
+        {
+            var newMeter = new IMR_Web_app.Services.Models.MeterModel
+            {
+                MeterSerial = meterForm.MeterSerial,
+                CustomerId = meterForm.CustomerId,
+                Utility = meterForm.Utility,
+                InstallDate = meterForm.InstallDate,
+                IsActive = meterForm.IsActive
+            };
+
+            await GService.AddMeterAsync(newMeter);
+            meterForm = new();
+            await LoadData();
+            successMessage = "Meter added.";
+        }
+        catch (System.Exception ex)
+        {
+            errorMessage = $"Failed to add meter: {ex.Message}";
+        }
+    }
+
+    private string GetCustomerName(int customerId)
+    {
+        var c = customers?.FirstOrDefault(x => x.CustomerId == customerId);
+        return c == null ? $"Customer {customerId}" : $"{c.CustomerRef} - {c.Name}";
+    }
+
+    private class MeterForm
+    {
+        [Required]
+        public string MeterSerial { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue, ErrorMessage = "Select a customer")]
+        public int CustomerId { get; set; }
+
+        [Required]
+        public string Utility { get; set; } = "Electricity";
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
+        public System.DateTime InstallDate { get; set; } = System.DateTime.Today;
+    }
     }
 }

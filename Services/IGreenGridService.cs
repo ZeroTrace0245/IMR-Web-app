@@ -9,6 +9,7 @@ namespace IMR_Web_app.Services
         Task<OverviewModel> GetOverviewAsync();
         Task<List<CustomerModel>> GetCustomersAsync();
         Task<List<MeterModel>> GetMetersAsync();
+        Task<MeterModel> AddMeterAsync(MeterModel meter);
         Task<List<BillModel>> GetBillsAsync();
         Task<CustomerModel> AddCustomerAsync(CustomerModel newCustomer);
         Task<AgingReportModel> GetAgingReportAsync();
@@ -21,9 +22,13 @@ namespace IMR_Web_app.Services
 
         Task<BillModel> GenerateBillAsync(int customerId, System.DateTime periodStart, System.DateTime periodEnd);
         Task<PaymentModel> RecordPaymentAsync(PaymentModel payment);
+        Task<BillModel?> UpdateBillStatusAsync(int billId, string status, decimal? outstandingAmount = null);
 
         Task<MonthlyRevenueModel> GetMonthlyRevenueAsync();
         Task<List<BillModel>> GetDefaultersAsync(int daysOverdue);
         Task<List<TopConsumerModel>> GetTopConsumersAsync(int topN);
+
+        Task<List<ComplaintModel>> GetComplaintsAsync();
+        Task<ComplaintModel> AddComplaintAsync(ComplaintModel complaint);
     }
 }

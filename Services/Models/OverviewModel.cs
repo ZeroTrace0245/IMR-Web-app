@@ -6,5 +6,6 @@ namespace IMR_Web_app.Services.Models
         public int TotalMeters { get; set; }
         public decimal TotalOutstanding { get; set; }
         public decimal MonthlyRevenue { get; set; }
+        public int OpenComplaints { get; set; }
     }
 }

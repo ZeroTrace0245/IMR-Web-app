@@ -1,13 +1,26 @@
 ﻿@page "/"
+@inject IMR_Web_app.Services.IAuthService AuthService
+@inject NavigationManager NavManager
 
 <PageTitle>Home</PageTitle>
 
-<h1>Welcome to Green Grid</h1>
-
-This prototype focuses on utility management (electricity, water, gas) for an eco-focused provider.
-
-<div class="mt-4">
-    <a class="btn btn-primary me-2" href="/greengrid">Open Dashboard</a>
-    <a class="btn btn-outline-secondary me-2" href="/customers">Customers</a>
-    <a class="btn btn-outline-secondary" href="/billing">Billing</a>
+<div class="d-flex align-items-center justify-content-center" style="min-height:60vh;">
+    <div class="text-center text-muted">
+        <div class="spinner-border text-light" role="status"></div>
+        <div class="mt-3">Redirecting...</div>
+    </div>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsAuthenticated)
+        {
+            NavManager.NavigateTo("/login", true);
+        }
+        else
+        {
+            NavManager.NavigateTo("/greengrid", true);
+        }
+    }
+}

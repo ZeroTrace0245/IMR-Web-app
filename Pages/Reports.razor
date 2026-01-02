@@ -1,9 +1,15 @@
 @page "/reports"
+@using System.Linq
 @inject IMR_Web_app.Services.IGreenGridService GService
 
 <PageTitle>Reports</PageTitle>
 
 <h1>Reports</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
 
 <div class="row">
     <div class="col-md-6">
@@ -15,7 +21,8 @@
             }
             else
             {
-                <div>@monthly.Month/@monthly.Year: @monthly.Collected</div>
+                <div class="fs-5 fw-semibold">@monthly.Month/@monthly.Year</div>
+                <div class="text-success">Collected: @monthly.Collected</div>
             }
         </div>
     </div>
@@ -28,7 +35,7 @@
             }
             else
             {
-                <table class="table">
+                <table class="table table-sm">
                     <thead><tr><th>Customer</th><th>Consumption</th></tr></thead>
                     <tbody>
                         @foreach(var t in top)
@@ -42,13 +49,133 @@
     </div>
 </div>
 
+<div class="card p-3 mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <div>
+            <h5 class="mb-0">Manual data-driven report</h5>
+            <small class="text-muted">Generate a quick summary from current bills, meters, and complaints.</small>
+        </div>
+        <div class="btn-group" role="group">
+            <button class="btn btn-outline-primary btn-sm" @onclick='() => BuildReport("Billing")'>Billing</button>
+            <button class="btn btn-outline-primary btn-sm" @onclick='() => BuildReport("Meters")'>Meters</button>
+            <button class="btn btn-outline-primary btn-sm" @onclick='() => BuildReport("Complaints")'>Complaints</button>
+        </div>
+    </div>
+
+    @if (reportRows.Any())
+    {
+        <div class="mb-2 fw-semibold">@reportTitle</div>
+        <table class="table table-sm">
+            <tbody>
+                @foreach (var row in reportRows)
+                {
+                    <tr>
+                        <td class="w-50">@row.Label</td>
+                        <td class="fw-semibold">@row.Value</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted mb-0"><em>Select a report to generate.</em></p>
+    }
+</div>
+
 @code{
     private IMR_Web_app.Services.Models.MonthlyRevenueModel? monthly;
     private List<IMR_Web_app.Services.Models.TopConsumerModel>? top;
+    private List<IMR_Web_app.Services.Models.BillModel>? bills;
+    private List<IMR_Web_app.Services.Models.MeterModel>? meters;
+    private List<IMR_Web_app.Services.Models.ComplaintModel>? complaints;
+    private string? errorMessage;
+
+    private string reportTitle = string.Empty;
+    private List<ReportRow> reportRows = new();
 
     protected override async Task OnInitializedAsync()
     {
-        monthly = await GService.GetMonthlyRevenueAsync();
-        top = await GService.GetTopConsumersAsync(5);
+        try
+        {
+            monthly = await GService.GetMonthlyRevenueAsync();
+            top = await GService.GetTopConsumersAsync(5);
+            bills = await GService.GetBillsAsync();
+            meters = await GService.GetMetersAsync();
+            complaints = await GService.GetComplaintsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report data: {ex.Message}";
+        }
     }
+
+    private void BuildReport(string type)
+    {
+        if (bills == null || meters == null || complaints == null)
+        {
+            errorMessage = "Data not loaded yet.";
+            return;
+        }
+
+        errorMessage = null;
+        reportRows.Clear();
+
+        switch (type)
+        {
+            case "Billing":
+                reportTitle = "Billing summary";
+                var paid = bills.Count(b => string.Equals(b.Status, "Paid", StringComparison.OrdinalIgnoreCase));
+                var partial = bills.Count(b => string.Equals(b.Status, "PartiallyPaid", StringComparison.OrdinalIgnoreCase));
+                var unpaid = bills.Count(b => string.Equals(b.Status, "Unpaid", StringComparison.OrdinalIgnoreCase));
+                var outstanding = bills.Sum(b => b.OutstandingAmount);
+                var totalBilled = bills.Sum(b => b.TotalAmount);
+                var latest = bills.OrderByDescending(b => b.BillId).FirstOrDefault();
+
+                reportRows.Add(new("Total billed", totalBilled.ToString("C")));
+                reportRows.Add(new("Outstanding", outstanding.ToString("C")));
+                reportRows.Add(new("Paid bills", paid.ToString()));
+                reportRows.Add(new("Partially paid", partial.ToString()));
+                reportRows.Add(new("Unpaid", unpaid.ToString()));
+                if (latest != null)
+                {
+                    reportRows.Add(new("Latest bill", $"#{latest.BillNumber} for customer {latest.CustomerId}"));
+                }
+                break;
+
+            case "Meters":
+                reportTitle = "Meter coverage";
+                var active = meters.Count(m => m.IsActive);
+                var inactive = meters.Count - active;
+                reportRows.Add(new("Total meters", meters.Count.ToString()));
+                reportRows.Add(new("Active", active.ToString()));
+                reportRows.Add(new("Inactive", inactive.ToString()));
+                reportRows.AddRange(meters
+                    .GroupBy(m => m.Utility ?? "Unknown")
+                    .OrderByDescending(g => g.Count())
+                    .Select(g => new ReportRow($"{g.Key} meters", g.Count().ToString())));
+                break;
+
+            case "Complaints":
+                reportTitle = "Complaints summary";
+                var open = complaints.Count(c => string.Equals(c.Status, "Open", StringComparison.OrdinalIgnoreCase));
+                var inProgress = complaints.Count(c => string.Equals(c.Status, "In Progress", StringComparison.OrdinalIgnoreCase));
+                var resolved = complaints.Count(c => string.Equals(c.Status, "Resolved", StringComparison.OrdinalIgnoreCase));
+                var highPriority = complaints.Count(c => string.Equals(c.Priority, "High", StringComparison.OrdinalIgnoreCase));
+
+                reportRows.Add(new("Total complaints", complaints.Count.ToString()));
+                reportRows.Add(new("Open", open.ToString()));
+                reportRows.Add(new("In Progress", inProgress.ToString()));
+                reportRows.Add(new("Resolved", resolved.ToString()));
+                reportRows.Add(new("High priority", highPriority.ToString()));
+                var latestComplaint = complaints.OrderByDescending(c => c.LoggedAt).FirstOrDefault();
+                if (latestComplaint != null)
+                {
+                    reportRows.Add(new("Latest", $"Customer {latestComplaint.CustomerId} - {latestComplaint.Category}"));
+                }
+                break;
+        }
+    }
+
+    private record ReportRow(string Label, string Value);
 }

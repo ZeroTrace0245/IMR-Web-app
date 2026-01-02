@@ -1,6 +1,6 @@
 ﻿@inject IMR_Web_app.Services.IAuthService AuthService
 
-<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row ps-3 navbar navbar-light">
     <div class="container-fluid d-flex align-items-center">
         <a class="navbar-brand d-flex align-items-center" href="">
             <img src="/images/greengrid-logo.svg" alt="Logo" style="height:36px; margin-right:8px;" />
@@ -57,6 +57,12 @@
                 <div class="nav-item px-3">
                     <NavLink class="nav-link nav-pill" href="tariffs" @onclick="CloseNavMenu">
                         <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Tariffs
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-pill d-flex align-items-center gap-2" href="complaints" @onclick="CloseNavMenu">
+                        <img src="/images/complaint.svg" alt="Complaints" width="16" height="16" />
+                        <span>Complaints</span>
                     </NavLink>
                 </div>
             </div>

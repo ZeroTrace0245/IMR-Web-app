@@ -1,0 +1,34 @@
+@inject IJSRuntime JS
+
+<button class="theme-toggle" title="Toggle theme" aria-label="Toggle theme" @onclick="ToggleTheme">
+    <span class="icon"></span>
+    <span class="icon"></span>
+    <span class="thumb @(current == "dark" ? "is-dark" : "is-light")"></span>
+</button>
+
+@code {
+    private string current = "dark";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var stored = await JS.InvokeAsync<string>("theme.get");
+            await ApplyTheme(string.IsNullOrWhiteSpace(stored) ? "dark" : stored);
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        var next = current == "dark" ? "light" : "dark";
+        await ApplyTheme(next);
+        StateHasChanged();
+    }
+
+    private async Task ApplyTheme(string theme)
+    {
+        current = theme == "light" ? "light" : "dark";
+        await JS.InvokeVoidAsync("theme.apply", current);
+    }
+}

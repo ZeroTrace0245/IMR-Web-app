@@ -38,6 +38,36 @@ else
                 <h3>@overview.MonthlyRevenue</h3>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card p-3 mb-3">
+                <h5>Open Complaints</h5>
+                <h3>@overview.OpenComplaints</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-4 mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="mb-1">Key metrics</h5>
+                <div class="text-muted small">Snapshot from current data</div>
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-semibold">Live overview</span>
+        </div>
+
+        <div class="overview-chart">
+            @foreach (var bar in bars)
+            {
+                <div class="bar-row">
+                    <div class="bar-label">@bar.Label</div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width:@GetWidth(bar.Value); background:@bar.Color;">
+                            <span class="bar-value">@bar.Display</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 
     <div class="mt-4">
@@ -49,9 +79,45 @@ else
 
 @code {
     private IMR_Web_app.Services.Models.OverviewModel? overview;
+    private List<ChartBar> bars = new();
+    private decimal maxBarValue = 1;
 
     protected override async Task OnInitializedAsync()
     {
         overview = await GService.GetOverviewAsync();
+        BuildBars();
     }
+
+    private void BuildBars()
+    {
+        if (overview == null)
+        {
+            return;
+        }
+
+        bars = new List<ChartBar>
+        {
+            new("Customers", overview.TotalCustomers, "linear-gradient(135deg,#7c8cfb,#5be0ff)", overview.TotalCustomers.ToString("N0")),
+            new("Meters", overview.TotalMeters, "linear-gradient(135deg,#20c997,#7ef29d)", overview.TotalMeters.ToString("N0")),
+            new("Outstanding", overview.TotalOutstanding, "linear-gradient(135deg,#f78ca0,#f9748f)", "$" + overview.TotalOutstanding.ToString("N2")),
+            new("Monthly Revenue", overview.MonthlyRevenue, "linear-gradient(135deg,#ffcf71,#ff9f43)", "$" + overview.MonthlyRevenue.ToString("N2")),
+            new("Open Complaints", overview.OpenComplaints, "linear-gradient(135deg,#ff7eb3,#ff758c)", overview.OpenComplaints.ToString("N0"))
+        };
+
+        maxBarValue = bars.Any() ? bars.Max(b => b.Value) : 1;
+        if (maxBarValue <= 0)
+        {
+            maxBarValue = 1;
+        }
+    }
+
+    private string GetWidth(decimal value)
+    {
+        var pct = (double)(value / maxBarValue) * 100d;
+        if (pct < 0) pct = 0;
+        if (pct > 100) pct = 100;
+        return $"{pct:F0}%";
+    }
+
+    private record ChartBar(string Label, decimal Value, string Color, string Display);
 }

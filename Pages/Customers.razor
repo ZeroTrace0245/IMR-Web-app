@@ -1,12 +1,16 @@
 @page "/customers"
 @inject IMR_Web_app.Services.IGreenGridService GService
+@inject IJSRuntime JS
 
 <PageTitle>Customers</PageTitle>
 
 <h1>Customers</h1>
 
 <div class="card p-3 mb-3">
-    <h5>Add Customer</h5>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Add Customer</h5>
+        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ExportCustomers">Export CSV</button>
+    </div>
     <EditForm Model="newCustomer" OnValidSubmit="AddCustomer">
         <div class="row">
             <div class="col-md-6 mb-2">
@@ -20,6 +24,9 @@
             </div>
             <div class="col-md-6 mb-2">
                 <InputText class="form-control" @bind-Value="newCustomer.Email" placeholder="Email" />
+            </div>
+            <div class="col-12 mb-2">
+                <InputText class="form-control" @bind-Value="newCustomer.Address" placeholder="Address" />
             </div>
         </div>
         <div class="mt-2">
@@ -42,6 +49,7 @@ else
                 <th>Type</th>
                 <th>Phone</th>
                 <th>Email</th>
+                <th>Address</th>
             </tr>
         </thead>
         <tbody>
@@ -53,6 +61,7 @@ else
                     <td>@c.CustomerType</td>
                     <td>@c.Phone</td>
                     <td>@c.Email</td>
+                    <td>@c.Address</td>
                 </tr>
             }
         </tbody>
@@ -73,5 +82,27 @@ else
         var added = await GService.AddCustomerAsync(newCustomer);
         newCustomer = new();
         customers = await GService.GetCustomersAsync();
+    }
+
+    private async Task ExportCustomers()
+    {
+        customers ??= await GService.GetCustomersAsync();
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("CustomerRef,Name,CustomerType,Phone,Email,Address");
+        foreach (var c in customers)
+        {
+            sb.AppendLine($"{Escape(c.CustomerRef)},{Escape(c.Name)},{Escape(c.CustomerType)},{Escape(c.Phone)},{Escape(c.Email)},{Escape(c.Address)}");
+        }
+
+        var csvBytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = System.Convert.ToBase64String(csvBytes);
+        await JS.InvokeVoidAsync("downloadFile", "customers.csv", "text/csv", base64);
+    }
+
+    private static string Escape(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+        var v = value.Replace("\"", "\"\"");
+        return $"\"{v}\"";
     }
 }

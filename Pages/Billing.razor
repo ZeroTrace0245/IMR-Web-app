@@ -1,9 +1,18 @@
 @page "/billing"
 @inject IMR_Web_app.Services.IGreenGridService GService
+@inject IJSRuntime JS
 
 <PageTitle>Billing</PageTitle>
 
-<h1>Bills</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Bills</h1>
+    <button class="btn btn-outline-secondary btn-sm" @onclick="ExportBills">Export CSV</button>
+    </div>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
 
 @if (bills == null)
 {
@@ -29,7 +38,7 @@ else
                     <td>@b.CustomerId</td>
                     <td>@b.TotalAmount</td>
                     <td>@b.OutstandingAmount</td>
-                    <td>@b.Status</td>
+                    <td><span class="@GetStatusBadgeClass(b.Status)">@b.Status</span></td>
                 </tr>
             }
         </tbody>
@@ -38,9 +47,48 @@ else
 
 @code {
     private List<IMR_Web_app.Services.Models.BillModel>? bills;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        bills = await GService.GetBillsAsync();
+        try
+        {
+            bills = await GService.GetBillsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load bills: {ex.Message}";
+            bills = new();
+        }
     }
+
+    private async Task ExportBills()
+    {
+        bills ??= await GService.GetBillsAsync();
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("BillId,BillNumber,CustomerId,TotalAmount,OutstandingAmount,Status");
+        foreach (var b in bills)
+        {
+            sb.AppendLine($"{b.BillId},{Escape(b.BillNumber)},{b.CustomerId},{b.TotalAmount},{b.OutstandingAmount},{Escape(b.Status)}");
+        }
+
+        var csvBytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = System.Convert.ToBase64String(csvBytes);
+        await JS.InvokeVoidAsync("downloadFile", "bills.csv", "text/csv", base64);
+    }
+
+    private static string Escape(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+        var v = value.Replace("\"", "\"\"");
+        return $"\"{v}\"";
+    }
+
+    private string GetStatusBadgeClass(string? status) => status switch
+    {
+        "Paid" => "badge bg-success",
+        "PartiallyPaid" => "badge bg-warning text-dark",
+        "Unpaid" => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
 }

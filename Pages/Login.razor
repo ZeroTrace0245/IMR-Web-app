@@ -2,46 +2,76 @@
 @inject IMR_Web_app.Services.IAuthService AuthService
 @inject NavigationManager NavManager
 
-<div class="d-flex align-items-center justify-content-center" style="min-height:60vh;">
-    <div class="card p-4" style="max-width:420px; width:100%;">
+<div class="login-shell">
+    <div class="login-card">
         <div class="text-center mb-3">
-            <img src="/images/greengrid-logo.svg" alt="GreenGrid" style="height:80px;" />
+            <img src="/images/greengrid-logo.svg" alt="GreenGrid" class="login-logo" />
+            <div class="login-brand">GreenGrid Portal</div>
+            <div class="login-subtitle">Sign in to manage energy, billing, and reports</div>
         </div>
-        <h4 class="text-center">Sign in to GreenGrid</h4>
+
         <EditForm Model="loginModel" OnValidSubmit="OnSubmit">
             <div class="mb-3">
-                <InputText class="form-control" @bind-Value="loginModel.Username" placeholder="Username" />
+                <label class="form-label">Username</label>
+                <InputText class="form-control" @bind-Value="loginModel.Username" placeholder="you@example.com" />
             </div>
             <div class="mb-3">
-                <InputText class="form-control" @bind-Value="loginModel.Password" placeholder="Password" type="password" />
+                <label class="form-label">Password</label>
+                <InputText class="form-control" @bind-Value="loginModel.Password" placeholder="••••••••" type="password" />
             </div>
             @if (!string.IsNullOrEmpty(error))
             {
                 <div class="text-danger mb-2">@error</div>
             }
-            <button class="btn btn-primary w-100" type="submit">Sign in</button>
+            <button class="btn btn-primary w-100 login-button" type="submit" disabled="@isSubmitting">
+                @(isSubmitting ? "Signing in..." : "Sign in")
+            </button>
         </EditForm>
-        <div class="mt-3 small text-muted">
-            Demo users: <br />admin / Admin123 (Administrative) • reader / Admin123 (MeterReader) • cashier / Admin123 (Cashier) • manager / Admin123 (Manager)
-        </div>
+
+        <details class="demo-panel mt-3">
+            <summary>Show demo credentials</summary>
+            <ul>
+                <li><strong>admin</strong> / Admin123 <span>(Administrative)</span></li>
+                <li><strong>reader</strong> / Admin123 <span>(MeterReader)</span></li>
+                <li><strong>cashier</strong> / Admin123 <span>(Cashier)</span></li>
+                <li><strong>manager</strong> / Admin123 <span>(Manager)</span></li>
+            </ul>
+        </details>
     </div>
+
+    @if (showTransition)
+    {
+        <div class="transition-overlay">
+            <div class="transition-content">
+                <div class="pulse-dot"></div>
+                <div class="transition-text">Signing you in...</div>
+            </div>
+        </div>
+    }
 </div>
 
 @code{
     private LoginModel loginModel = new();
     private string? error;
+    private bool isSubmitting;
+    private bool showTransition;
 
     private async Task OnSubmit()
     {
         error = null;
+        isSubmitting = true;
         var ok = await AuthService.LoginAsync(loginModel.Username ?? string.Empty, loginModel.Password ?? string.Empty);
         if (ok)
         {
+            showTransition = true;
+            StateHasChanged();
+            await Task.Delay(900);
             NavManager.NavigateTo("/greengrid", true);
         }
         else
         {
             error = "Invalid username or password.";
+            isSubmitting = false;
         }
     }
 

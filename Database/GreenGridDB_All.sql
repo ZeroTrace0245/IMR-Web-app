@@ -100,6 +100,17 @@ CREATE TABLE Payment(
     ReceiptRef NVARCHAR(100),
     FOREIGN KEY (BillId) REFERENCES Bill(BillId)
 );
+ 
+CREATE TABLE Complaint(
+    ComplaintId INT IDENTITY PRIMARY KEY,
+    CustomerId INT NOT NULL,
+    Category NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(500) NOT NULL,
+    Status NVARCHAR(30) NOT NULL DEFAULT 'Open',
+    Priority NVARCHAR(20) NOT NULL DEFAULT 'Medium',
+    LoggedAt DATETIME2 DEFAULT SYSUTCDATETIME(),
+    FOREIGN KEY (CustomerId) REFERENCES Customer(CustomerId)
+);
 GO
 
 
@@ -285,10 +296,20 @@ EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 4, @PeriodStart='2024-01-01', 
 -- Make sample payments
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (1, 50.00, 'Cash', 'RCPT-0001');
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (2, 20.00, 'Online', 'RCPT-0002');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (3, 90.00, 'POS', 'RCPT-0003');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (4, 60.00, 'Mobile', 'RCPT-0004');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (5, 160.00, 'Bank', 'RCPT-0005');
 
 -- Additional sample bills to ensure >10 bill lines
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 3, @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 5, @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
+
+-- Sample complaints
+INSERT INTO Complaint (CustomerId, Category, Description, Status, Priority)
+VALUES
+(1,'Billing','January bill seems high','Open','High'),
+(4,'Meter','Meter not sending readings','In Progress','Medium'),
+(2,'Payment','Payment not reflecting on account','Resolved','Low');
 
 GO
 
@@ -300,6 +321,7 @@ SELECT 'MeterReadings' AS [Table], COUNT(*) AS [Rows] FROM MeterReading;
 SELECT 'Bills' AS [Table], COUNT(*) AS [Rows] FROM Bill;
 SELECT 'BillLines' AS [Table], COUNT(*) AS [Rows] FROM BillLine;
 SELECT 'Payments' AS [Table], COUNT(*) AS [Rows] FROM Payment;
+SELECT 'Complaints' AS [Table], COUNT(*) AS [Rows] FROM Complaint;
 
 PRINT 'Script complete.';
 GO
