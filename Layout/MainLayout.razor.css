@@ -49,6 +49,94 @@ body.theme-dark .top-row {
         text-overflow: ellipsis;
     }
 
+.account-menu { position: relative; }
+
+.account-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: var(--surface-strong);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.account-button:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(0,0,0,0.12); }
+
+.avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-strong), #2563eb);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.22);
+}
+
+.avatar.small { width: 28px; height: 28px; font-size: 0.9rem; }
+
+.account-meta { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.account-name { font-weight: 700; font-size: 0.95rem; }
+.account-role { font-size: 0.8rem; color: var(--muted); }
+.caret { font-size: 0.8rem; color: var(--muted); }
+
+.account-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 240px;
+    background: var(--surface-strong);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 0.75rem;
+    z-index: 8;
+}
+
+.account-dropdown-header {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 0.5rem;
+}
+
+.dropdown-item {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 0.5rem 0.35rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.dropdown-item:hover:not(:disabled) { background: rgba(59,130,246,0.08); }
+.dropdown-item:disabled { opacity: 0.6; cursor: not-allowed; }
+.dropdown-item.logout { color: #ef4444; }
+.dropdown-item.logout:hover { background: rgba(239,68,68,0.12); }
+
+.dropdown-note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding: 0.35rem 0.35rem 0.2rem;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--card-border);
+    margin: 0.4rem 0;
+}
+
 article.content {
     background: linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.35) 60%, rgba(255,255,255,0) 100%);
     border-radius: 22px;

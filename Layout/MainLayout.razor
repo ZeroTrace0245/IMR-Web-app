@@ -1,13 +1,60 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject IMR_Web_app.Services.IAuthService AuthService
+@inject NavigationManager NavManager
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
+        <div class="top-row px-4" @onclick="CloseAccountMenu">
             <div class="ms-auto d-flex align-items-center gap-3">
                 <ThemeToggle />
+
+                <NavLink class="top-link" href="settings">Settings</NavLink>
+
+                @if (AuthService.IsAuthenticated)
+                {
+                    <div class="account-menu" @onclick:stopPropagation="true">
+                        <button type="button" class="account-button" @onclick="ToggleAccountMenu">
+                            <div class="avatar">@UserInitial</div>
+                            <div class="account-meta">
+                                <div class="account-name">@DisplayName</div>
+                                <div class="account-role">@DisplayRole</div>
+                            </div>
+                            <span class="caret">▾</span>
+                        </button>
+
+                        @if (showAccountMenu)
+                        {
+                            <div class="account-dropdown shadow">
+                                <div class="account-dropdown-header">
+                                    <div class="avatar small">@UserInitial</div>
+                                    <div>
+                                        <div class="account-name">@DisplayName</div>
+                                        <div class="account-role">@DisplayRole</div>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="dropdown-item" disabled>
+                                    Account management (demo)
+                                </button>
+                                <div class="dropdown-note">
+                                    Demo access only. Manage credentials through the provided demo users.
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <button type="button" class="dropdown-item logout" @onclick="Logout">
+                                    Sign out
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+
                 <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
             </div>
         </div>
@@ -17,3 +64,55 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool showAccountMenu;
+
+    private string DisplayName => string.IsNullOrWhiteSpace(AuthService.CurrentUserName)
+        ? "Demo user"
+        : AuthService.CurrentUserName;
+
+    private string DisplayRole => string.IsNullOrWhiteSpace(AuthService.CurrentRole)
+        ? "User"
+        : AuthService.CurrentRole;
+
+    private string UserInitial => string.IsNullOrWhiteSpace(AuthService.CurrentUserName)
+        ? "D"
+        : char.ToUpperInvariant(AuthService.CurrentUserName![0]).ToString();
+
+    protected override void OnInitialized()
+    {
+        AuthService.AuthStateChanged += OnAuthStateChanged;
+    }
+
+    private void OnAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleAccountMenu()
+    {
+        showAccountMenu = !showAccountMenu;
+    }
+
+    private void CloseAccountMenu()
+    {
+        if (showAccountMenu)
+        {
+            showAccountMenu = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Logout()
+    {
+        showAccountMenu = false;
+        await AuthService.LogoutAsync();
+        NavManager.NavigateTo("/login", true);
+    }
+
+    public void Dispose()
+    {
+        AuthService.AuthStateChanged -= OnAuthStateChanged;
+    }
+}
