@@ -16,77 +16,77 @@ erDiagram
     Customer ||--o{ Complaint : "logs"
 
     UtilityType {
-        int UtilityTypeId PK
-        nvarchar Name
+        UtilityTypeId int PK
+        Name nvarchar
     }
     Customer {
-        int CustomerId PK
-        nvarchar CustomerRef UNIQUE
-        nvarchar Name
-        nvarchar CustomerType
-        nvarchar Phone
-        nvarchar Email
-        nvarchar Address
-        datetime2 CreatedAt
+        CustomerId int PK
+        CustomerRef nvarchar UNIQUE
+        Name nvarchar
+        CustomerType nvarchar
+        Phone nvarchar
+        Email nvarchar
+        Address nvarchar
+        CreatedAt datetime2
     }
     Meter {
-        int MeterId PK
-        nvarchar MeterSerial UNIQUE
-        int CustomerId FK
-        int UtilityTypeId FK
-        date InstallDate
-        bit IsActive
+        MeterId int PK
+        MeterSerial nvarchar UNIQUE
+        CustomerId int FK
+        UtilityTypeId int FK
+        InstallDate date
+        IsActive bit
     }
     Tariff {
-        int TariffId PK
-        int UtilityTypeId FK
-        nvarchar Name
-        decimal UnitPrice
-        date EffectiveFrom
-        date EffectiveTo
+        TariffId int PK
+        UtilityTypeId int FK
+        Name nvarchar
+        UnitPrice decimal
+        EffectiveFrom date
+        EffectiveTo date
     }
     MeterReading {
-        int ReadingId PK
-        int MeterId FK
-        date ReadingDate
-        decimal ReadingValue
-        datetime2 CreatedAt
+        ReadingId int PK
+        MeterId int FK
+        ReadingDate date
+        ReadingValue decimal
+        CreatedAt datetime2
     }
     Bill {
-        int BillId PK
-        int CustomerId FK
-        nvarchar BillNumber UNIQUE
-        date PeriodStart
-        date PeriodEnd
-        decimal TotalAmount
-        decimal OutstandingAmount
-        nvarchar Status
-        datetime2 GeneratedAt
+        BillId int PK
+        CustomerId int FK
+        BillNumber nvarchar UNIQUE
+        PeriodStart date
+        PeriodEnd date
+        TotalAmount decimal
+        OutstandingAmount decimal
+        Status nvarchar
+        GeneratedAt datetime2
     }
     BillLine {
-        int BillLineId PK
-        int BillId FK
-        int MeterId FK
-        int UtilityTypeId FK
-        decimal Units
-        decimal UnitPrice
-        decimal LineAmount
+        BillLineId int PK
+        BillId int FK
+        MeterId int FK
+        UtilityTypeId int FK
+        Units decimal
+        UnitPrice decimal
+        LineAmount decimal
     }
     Payment {
-        int PaymentId PK
-        int BillId FK
-        datetime2 PaymentDate
-        decimal Amount
-        nvarchar Method
-        nvarchar ReceiptRef
+        PaymentId int PK
+        BillId int FK
+        PaymentDate datetime2
+        Amount decimal
+        Method nvarchar
+        ReceiptRef nvarchar
     }
     Complaint {
-        int ComplaintId PK
-        int CustomerId FK
-        nvarchar Category
-        nvarchar Description
-        nvarchar Status
-        nvarchar Priority
-        datetime2 LoggedAt
+        ComplaintId int PK
+        CustomerId int FK
+        Category nvarchar
+        Description nvarchar
+        Status nvarchar
+        Priority nvarchar
+        LoggedAt datetime2
     }
 ```
