@@ -246,9 +246,14 @@ VALUES
 ('CUST-0007','Green Grid Factory','Business','011-4001','factory@greengrid.example','50 Industrial Dr'),
 ('CUST-0008','Green Grid Complex','Household','011-5001','complex@greengrid.example','200 Multi St'),
 ('CUST-0009','Green Grid Farm','Business','011-6001','farm@greengrid.example','700 Rural Ln'),
-('CUST-0010','Green Grid School','Government','011-7001','school@greengrid.example','12 Education Rd');
+('CUST-0010','Green Grid School','Government','011-7001','school@greengrid.example','12 Education Rd'),
+('CUST-0011','Green Grid Clinic','Government','011-8001','clinic@greengrid.example','22 Health Rd'),
+('CUST-0012','Green Grid Mall','Business','011-8002','mall@greengrid.example','300 Retail Blvd'),
+('CUST-0013','Green Grid Apartments','Household','011-8003','apartments@greengrid.example','45 Tower Way'),
+('CUST-0014','Green Grid Stadium','Business','011-8004','stadium@greengrid.example','1 Arena Loop'),
+('CUST-0015','Green Grid Lab','Government','011-8005','lab@greengrid.example','9 Research Park');
 
--- Insert meters (assign at least 10 meters)
+-- Insert meters 
 INSERT INTO Meter (MeterSerial, CustomerId, UtilityTypeId, InstallDate)
 VALUES
 ('MTR-E-1001',1,1,'2023-01-01'),
@@ -260,7 +265,12 @@ VALUES
 ('MTR-E-1004',6,1,'2021-06-10'),
 ('MTR-W-1003',7,2,'2022-07-01'),
 ('MTR-G-1002',8,3,'2023-01-20'),
-('MTR-E-1005',9,1,'2023-05-05');
+('MTR-E-1005',9,1,'2023-05-05'),
+('MTR-E-1006',10,1,'2023-06-01'),
+('MTR-W-1004',2,2,'2023-07-01'),
+('MTR-G-1003',5,3,'2023-07-15'),
+('MTR-E-1007',7,1,'2023-08-01'),
+('MTR-W-1005',11,2,'2023-08-15');
 
 -- Tariffs
 INSERT INTO Tariff (UtilityTypeId, Name, UnitPrice, EffectiveFrom)
@@ -269,11 +279,14 @@ VALUES
 (2,'Water Standard',0.0500,'2023-01-01'),
 (3,'Gas Standard',0.1000,'2023-01-01');
 
+
 -- MeterReadings: create readings across several months for each meter
 -- For simplicity we create monthly readings for Jan-Apr 2024
 
 -- Helper: list of meter ids
-DECLARE @m1 INT = 1, @m2 INT = 2, @m3 INT = 3, @m4 INT = 4, @m5 INT = 5, @m6 INT = 6, @m7 INT = 7, @m8 INT = 8, @m9 INT = 9, @m10 INT = 10;
+DECLARE @m1 INT = 1, @m2 INT = 2, @m3 INT = 3, @m4 INT = 4, @m5 INT = 5,
+        @m6 INT = 6, @m7 INT = 7, @m8 INT = 8, @m9 INT = 9, @m10 INT = 10,
+        @m11 INT = 11, @m12 INT = 12, @m13 INT = 13, @m14 INT = 14, @m15 INT = 15;
 
 INSERT INTO MeterReading (MeterId, ReadingDate, ReadingValue)
 VALUES
@@ -286,30 +299,50 @@ VALUES
 (@m7,'2024-01-01',800), (@m7,'2024-02-01',820), (@m7,'2024-03-01',840), (@m7,'2024-04-01',860),
 (@m8,'2024-01-01',60),  (@m8,'2024-02-01',80),  (@m8,'2024-03-01',90),  (@m8,'2024-04-01',100),
 (@m9,'2024-01-01',700), (@m9,'2024-02-01',740), (@m9,'2024-03-01',780), (@m9,'2024-04-01',820),
-(@m10,'2024-01-01',450),(@m10,'2024-02-01',460),(@m10,'2024-03-01',480),(@m10,'2024-04-01',500);
+(@m10,'2024-01-01',450),(@m10,'2024-02-01',460),(@m10,'2024-03-01',480),(@m10,'2024-04-01',500),
+(@m11,'2024-01-01',600),(@m11,'2024-02-01',640),(@m11,'2024-03-01',680),(@m11,'2024-04-01',720),
+(@m12,'2024-01-01',90), (@m12,'2024-02-01',100),(@m12,'2024-03-01',110),(@m12,'2024-04-01',120),
+(@m13,'2024-01-01',5100),(@m13,'2024-02-01',5200),(@m13,'2024-03-01',5300),(@m13,'2024-04-01',5450),
+(@m14,'2024-01-01',880),(@m14,'2024-02-01',900),(@m14,'2024-03-01',930),(@m14,'2024-04-01',960),
+(@m15,'2024-01-01',70), (@m15,'2024-02-01',85), (@m15,'2024-03-01',95), (@m15,'2024-04-01',110);
 
--- Generate bills for a couple of customers for Jan 2024 period
-EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 1, @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
-EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 2, @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
-EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 4, @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
+-- Generate a broader set of bills to showcase data
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 1,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 2,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 4,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 3,  @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 5,  @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 6,  @PeriodStart='2024-03-01', @PeriodEnd='2024-03-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 7,  @PeriodStart='2024-03-01', @PeriodEnd='2024-03-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 8,  @PeriodStart='2024-03-01', @PeriodEnd='2024-03-31';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 9,  @PeriodStart='2024-04-01', @PeriodEnd='2024-04-30';
+EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 10, @PeriodStart='2024-04-01', @PeriodEnd='2024-04-30';
 
--- Make sample payments
-INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (1, 50.00, 'Cash', 'RCPT-0001');
-INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (2, 20.00, 'Online', 'RCPT-0002');
-INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (3, 90.00, 'POS', 'RCPT-0003');
-INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (4, 60.00, 'Mobile', 'RCPT-0004');
-INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (5, 160.00, 'Bank', 'RCPT-0005');
+-- Make sample payments after bills exist (10 payments)
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (1, 50.00,  'Cash',   'RCPT-0001');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (2, 70.00,  'Online', 'RCPT-0002');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (3, 90.00,  'POS',    'RCPT-0003');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (4, 60.00,  'Mobile', 'RCPT-0004');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (5, 160.00, 'Bank',   'RCPT-0005');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (6, 200.00, 'Online', 'RCPT-0006');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (7, 45.00,  'Cash',   'RCPT-0007');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (8, 95.00,  'POS',    'RCPT-0008');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (9, 120.00, 'Bank',   'RCPT-0009');
+INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (10,80.00,  'Mobile', 'RCPT-0010');
 
--- Additional sample bills to ensure >10 bill lines
-EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 3, @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
-EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 5, @PeriodStart='2024-02-01', @PeriodEnd='2024-02-28';
-
--- Sample complaints
+-- Sample complaints (10 entries)
 INSERT INTO Complaint (CustomerId, Category, Description, Status, Priority)
 VALUES
 (1,'Billing','January bill seems high','Open','High'),
 (4,'Meter','Meter not sending readings','In Progress','Medium'),
-(2,'Payment','Payment not reflecting on account','Resolved','Low');
+(2,'Payment','Payment not reflecting on account','Resolved','Low'),
+(5,'Service','Water pressure is low','Open','Medium'),
+(6,'Outage','Power outage during storm','In Progress','High'),
+(7,'Billing','Charged for incorrect tariff','Open','Medium'),
+(8,'Support','Need help with portal login','Resolved','Low'),
+(9,'Meter','Gas meter making noise','Open','High'),
+(10,'Payment','Bank transfer pending','In Progress','Low'),
+(3,'General','Inquiry about energy-saving tips','Open','Low');
 
 GO
 
