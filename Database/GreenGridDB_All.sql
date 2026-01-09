@@ -306,7 +306,7 @@ VALUES
 (@m14,'2024-01-01',880),(@m14,'2024-02-01',900),(@m14,'2024-03-01',930),(@m14,'2024-04-01',960),
 (@m15,'2024-01-01',70), (@m15,'2024-02-01',85), (@m15,'2024-03-01',95), (@m15,'2024-04-01',110);
 
--- Generate a broader set of bills to showcase data
+-- set of bills to showcase data
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 1,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 2,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 4,  @PeriodStart='2024-01-01', @PeriodEnd='2024-01-31';
@@ -318,7 +318,7 @@ EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 8,  @PeriodStart='2024-03-01',
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 9,  @PeriodStart='2024-04-01', @PeriodEnd='2024-04-30';
 EXEC dbo.sp_GenerateBillForCustomer @CustomerId = 10, @PeriodStart='2024-04-01', @PeriodEnd='2024-04-30';
 
--- Make sample payments after bills exist (10 payments)
+-- sample payments after bills
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (1, 50.00,  'Cash',   'RCPT-0001');
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (2, 70.00,  'Online', 'RCPT-0002');
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (3, 90.00,  'POS',    'RCPT-0003');
@@ -330,7 +330,7 @@ INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (8, 95.00,  'POS
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (9, 120.00, 'Bank',   'RCPT-0009');
 INSERT INTO Payment (BillId, Amount, Method, ReceiptRef) VALUES (10,80.00,  'Mobile', 'RCPT-0010');
 
--- Sample complaints (10 entries)
+-- Sample complaints
 INSERT INTO Complaint (CustomerId, Category, Description, Status, Priority)
 VALUES
 (1,'Billing','January bill seems high','Open','High'),
