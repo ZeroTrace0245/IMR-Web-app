@@ -208,6 +208,7 @@ FROM Bill b
 JOIN Customer c ON b.CustomerId = c.CustomerId
 WHERE b.OutstandingAmount > 0;
 
+-- views
 CREATE VIEW vw_MonthlyRevenue AS
 SELECT YEAR(p.PaymentDate) AS Yr, MONTH(p.PaymentDate) AS Mo, SUM(p.Amount) AS Collected
 FROM Payment p
