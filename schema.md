@@ -1,92 +1,92 @@
 # GreenGridDB Schema Diagram
 
-A quick online-viewable diagram using Mermaid. Render at https://mermaid.live/ or any Mermaid-enabled viewer.
+Mermaid ERD showing the tables and their FK relationships. View in any Mermaid-enabled markdown viewer (e.g., https://mermaid.live/).
 
 ```mermaid
 erDiagram
     UtilityType ||--o{ Meter : "has"
-    UtilityType ||--o{ Tariff : "priced by"
+    UtilityType ||--o{ Tariff : "priced"
+    UtilityType ||--o{ BillLine : "typed"
     Customer ||--o{ Meter : "owns"
     Customer ||--o{ Bill : "billed"
-    Meter ||--o{ MeterReading : "records"
-    Meter ||--o{ BillLine : "itemized"
-    Tariff ||--o{ BillLine : "rate"
+    Customer ||--o{ Complaint : "logs"
+    Meter ||--o{ MeterReading : "reads"
+    Meter ||--o{ BillLine : "itemizes"
     Bill ||--o{ BillLine : "lines"
     Bill ||--o{ Payment : "paid by"
-    Customer ||--o{ Complaint : "logs"
 
     UtilityType {
-        UtilityTypeId int PK
-        Name nvarchar
+        int UtilityTypeId PK
+        nvarchar Name UNIQUE
     }
     Customer {
-        CustomerId int PK
-        CustomerRef nvarchar UNIQUE
-        Name nvarchar
-        CustomerType nvarchar
-        Phone nvarchar
-        Email nvarchar
-        Address nvarchar
-        CreatedAt datetime2
+        int CustomerId PK
+        nvarchar CustomerRef UNIQUE
+        nvarchar Name
+        nvarchar CustomerType
+        nvarchar Phone
+        nvarchar Email
+        nvarchar Address
+        datetime2 CreatedAt
     }
     Meter {
-        MeterId int PK
-        MeterSerial nvarchar UNIQUE
-        CustomerId int FK
-        UtilityTypeId int FK
-        InstallDate date
-        IsActive bit
+        int MeterId PK
+        nvarchar MeterSerial UNIQUE
+        int CustomerId FK
+        int UtilityTypeId FK
+        date InstallDate
+        bit IsActive
     }
     Tariff {
-        TariffId int PK
-        UtilityTypeId int FK
-        Name nvarchar
-        UnitPrice decimal
-        EffectiveFrom date
-        EffectiveTo date
+        int TariffId PK
+        int UtilityTypeId FK
+        nvarchar Name
+        decimal UnitPrice
+        date EffectiveFrom
+        date EffectiveTo NULL
     }
     MeterReading {
-        ReadingId int PK
-        MeterId int FK
-        ReadingDate date
-        ReadingValue decimal
-        CreatedAt datetime2
+        int ReadingId PK
+        int MeterId FK
+        date ReadingDate
+        decimal ReadingValue
+        datetime2 CreatedAt
     }
     Bill {
-        BillId int PK
-        CustomerId int FK
-        BillNumber nvarchar UNIQUE
-        PeriodStart date
-        PeriodEnd date
-        TotalAmount decimal
-        OutstandingAmount decimal
-        Status nvarchar
-        GeneratedAt datetime2
+        int BillId PK
+        int CustomerId FK
+        nvarchar BillNumber UNIQUE
+        date PeriodStart
+        date PeriodEnd
+        decimal TotalAmount
+        decimal OutstandingAmount
+        nvarchar Status
+        datetime2 GeneratedAt
     }
     BillLine {
-        BillLineId int PK
-        BillId int FK
-        MeterId int FK
-        UtilityTypeId int FK
-        Units decimal
-        UnitPrice decimal
-        LineAmount decimal
+        int BillLineId PK
+        int BillId FK
+        int MeterId FK
+        int UtilityTypeId FK
+        decimal Units
+        decimal UnitPrice
+        decimal LineAmount
     }
     Payment {
-        PaymentId int PK
-        BillId int FK
-        PaymentDate datetime2
-        Amount decimal
-        Method nvarchar
-        ReceiptRef nvarchar
+        int PaymentId PK
+        int BillId FK
+        datetime2 PaymentDate
+        decimal Amount
+        nvarchar Method
+        nvarchar ReceiptRef
     }
     Complaint {
-        ComplaintId int PK
-        CustomerId int FK
-        Category nvarchar
-        Description nvarchar
-        Status nvarchar
-        Priority nvarchar
-        LoggedAt datetime2
+        int ComplaintId PK
+        int CustomerId FK
+        nvarchar Category
+        nvarchar Description
+        nvarchar Status
+        nvarchar Priority
+        datetime2 LoggedAt
     }
 ```

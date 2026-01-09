@@ -346,7 +346,7 @@ VALUES
 
 GO
 
--- Final sanity queries (helpful for quick verification when running the script)
+-- Final sanity queries
 PRINT 'Counts:';
 SELECT 'Customers' AS [Table], COUNT(*) AS [Rows] FROM Customer;
 SELECT 'Meters' AS [Table], COUNT(*) AS [Rows] FROM Meter;
