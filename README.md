@@ -197,6 +197,5 @@ Replace the placeholders below with actual image files (for example under `docs/
 
 - **Target Framework**: `.NET 10`
 - **ASP.NET Core / Blazor**: version matching `.NET 10` (vNext); ensure your environment uses the correct SDK.
-- This README describes the current version of the project. If you upgrade the project (for example from .NET 10 preview to final or to future .NET versions), update this section accordingly.
 
 ---
